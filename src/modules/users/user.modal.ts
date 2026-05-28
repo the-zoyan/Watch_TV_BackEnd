@@ -50,7 +50,16 @@ const userSchema = new Schema<IUser>(
       type: [String],
       default: [],
     },
-
+    activationCOde:{
+       type:String,
+       default:null,
+       select:false
+    },
+    activationCodeExpiry:{
+      type:Date,
+      default:null,
+      select:false
+    },
     isVerified: {
       type: Boolean,
       default: false,
