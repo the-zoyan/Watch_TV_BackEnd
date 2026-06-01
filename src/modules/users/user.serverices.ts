@@ -1,5 +1,5 @@
 import { User } from "../users/user.modal.js"
-import {findUsrByEmail} from "../users/user.reposiroty.js"
+import { findUsrByEmail, saveUser } from "../users/user.reposiroty.js"
 import { sendMail } from "../../utils/sendMail.js";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -21,7 +21,7 @@ export const RegisterUser = async (userData: {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-  
+
     const existingUser = await findUsrByEmail(normalizedEmail);
 
     if (existingUser) {
@@ -44,14 +44,14 @@ export const RegisterUser = async (userData: {
       name,
       email: normalizedEmail,
       password: hashedPassword,
-      activationCode, 
-      activationCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), 
+      activationCode,
+      activationCodeExpiry: new Date(Date.now() + 10 * 60 * 1000),
       isVerified: false,
     });
 
     await newUser.save();
 
- 
+
     await sendMail({
       email: newUser.email,
       subject: "Verify Your Account",
@@ -66,7 +66,7 @@ export const RegisterUser = async (userData: {
       success: true,
       message: "Registration successful. Verification email sent.",
     };
-    
+
   } catch (error) {
     console.error("Registration Error:", error);
 
@@ -76,4 +76,122 @@ export const RegisterUser = async (userData: {
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}; 
+};
+
+
+export const activateUserAccount = async (email: string, activationCode: string) => {
+  try {
+    const user = await findUsrByEmail(email)
+    if (!user) {
+      return {
+        success: false,
+        message: "User not found",
+        error: ['No account founf with the provided email address , Please check the email and try again']
+      }
+    }
+
+    if (user.activationCode !== activationCode) {
+      return {
+        success: false,
+        message: "Invalid activation code",
+        error: ['The activation code you provided is incorrect. Please check the code and try again.']
+      }
+    }
+
+    if (user.activationCodeExpiry && user.activationCodeExpiry < new Date()) {
+      return {
+        success: false,
+        message: "Activation code expired",
+        error: ['The activation code has expired. Please request a new code to activate your account.']
+      }
+    }
+
+    user.isVerified = true;
+    user.activationCode = undefined;
+    user.activationCodeExpiry = undefined;
+
+    await user.save();
+
+    return {
+      success: true,
+      message: "Account activated successfully"
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Account activation failed",
+      error: error instanceof Error ? error.message : "Unknown error",
+    }
+  }
+}
+
+export const resendActivationCode = async (email: string) => {
+  try {
+    const user = await findUsrByEmail(email)
+    if (!user) {
+      return {
+        success: false,
+        message: "User Not Found !",
+        error: ['No account found with the provided email address. Please check the email and try again.']
+      }
+    }
+    if (user.isVerified) {
+      return {
+        success: false,
+        message: "Account Already Activated",
+        error: ['This account is already activated. Please log in to your account.']
+      }
+    }
+    const COOLDOWN_PERIOD = 1 * 60 * 1000;
+    if (user.lastActivationCodeSentAt) {
+      const timeSinceLastSent = Date.now() - user.lastActivationCodeSentAt.getTime()
+      const remainingTime = COOLDOWN_PERIOD - timeSinceLastSent
+
+      if (timeSinceLastSent < COOLDOWN_PERIOD) {
+        const seconds = Math.ceil(Math.max(remainingTime, 0) / 1000)
+        return {
+          success: false,
+          message: "Please wait before requesting a new activation code",
+          error: [`You can request a new activation code in ${seconds} seconds.`],
+          data: {
+            message: `Please wait ${seconds} seconds before requesting a new activation code.`,
+            retryAfter: seconds
+          }
+        }
+      }
+    }
+
+    const activationCode = crypto.randomBytes(3).toString('hex').toUpperCase()
+    user.activationCode = activationCode
+    user.activationCodeExpiry = new Date(Date.now() + 10 * 60 * 1000)
+    user.lastActivationCodeSentAt = new Date()
+
+    await saveUser(user)
+
+    await sendMail({
+      email: user.email,
+      subject: "Verify Your Account",
+      template: "activation-mail.ejs",
+      data: {
+        name: user.name,
+        activationCode,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Activation code resent successfully",
+      data: {
+        message: "A new activation code has been sent to your email address. Please check your email to activate your account."
+      }
+    }
+
+  } catch (error: any) {
+    return {
+      success: false,
+      error: [error.message || "An error occurred while resending activation code"],
+      message: "Failed to resend activation code"
+    }
+  }
+}

@@ -55,6 +55,11 @@ const userSchema = new Schema<IUser>(
       default: null,
       select: false,
     },
+    lastActivationCodeSentAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
 
     isVerified: {
       type: Boolean,

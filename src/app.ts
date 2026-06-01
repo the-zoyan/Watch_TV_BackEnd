@@ -13,7 +13,7 @@ app.use(cookieParser());
 app.use("/api/v1/user", userRoutes);
 
 app.get("/", (req, res) => {
-  res.json({ message: "Backend running" });
+  res.json({ message: "Backend running..." });
 });
 
 export default app;

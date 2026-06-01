@@ -1,31 +1,34 @@
 import { Document } from "mongoose";
 
-export enum Role{
-    User = "user",
-    PREMIUM_USer="premiumUser",
-    ADMIN="admin",
+export enum Role {
+  User = "user",
+  PREMIUM_USER = "premiumUser",
+  ADMIN = "admin",
 }
 
-export interface IUser extends Document{
+export interface IUser extends Document {
   id: string;
 
   name: string;
-  username: string;
+  username?: string;
 
   email: string;
   password: string;
 
   avatar?: string;
 
-  role: Role
+  role: Role;
 
   favorite?: string[];
   watchlist?: string[];
   recentlyWatched?: string[];
-  activationCode?:string | null;
-  activationCodeExpiry:Date | null
+
+  activationCode?: string | null;
+  activationCodeExpiry?: Date | null;
+  lastActivationCodeSentAt?: Date | null;
+
   isVerified: boolean;
+
   createdAt: Date;
   updatedAt: Date;
-};
-
+}
