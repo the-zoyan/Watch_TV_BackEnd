@@ -1,60 +1,79 @@
-import { User } from "./user.modal.js";
-import { findUsrByEmail, saveUser } from "./user.reposiroty.js";
-import crpto from 'crypto'
-import bcrypt from 'bcrypt'
+import { User } from "../users/user.modal.js"
+import {findUsrByEmail} from "../users/user.reposiroty.js"
+import { sendMail } from "../../utils/sendMail.js";
+import crypto from "crypto";
+import bcrypt from "bcrypt";
 
-export const RegisterUser = async (userData: { name: string, email: string, password: string }) => {
-    try {
-        const { name, email, password } = userData;
+export const RegisterUser = async (userData: {
+  name: string;
+  email: string;
+  password: string;
+}) => {
+  try {
+    const { name, email, password } = userData;
 
-        if (!name || !email || !password) {
-            return {
-                success: false,
-                message: "Register Failed ",
-                error: ['All feiled are required Please try agin !']
-            }
-        }
-        const existinguser = await findUsrByEmail(email)
-
-        if (existinguser) {
-            return {
-                success: false,
-                message: "User Already Exists",
-                error: ['User Already Exists ,Please use another email']
-            }
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10)
-
-
-        const newUser = new User({
-            name,
-            email,
-            password: hashedPassword
-        })
-
-        const activationCode = crpto.randomBytes(3).toString('hex').toUpperCase();
-        newUser.activationCOde = activationCode;
-        newUser.activationCodeExpiry = new Date(Date.now() + 10 * 60 * 1000)
-        await saveUser(newUser)
-         
-        
-
-        return {
-            success: true,
-            data: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email
-            },
-            message: "User Register successfully !"
-        }
-    }catch(error){
-        return{
-            success:false,
-            message:"An error occured during registration",
-            error:[error instanceof Error ? error.message : "Unknown Error"],
-        }
+    if (!name || !email || !password) {
+      return {
+        success: false,
+        message: "All fields are required",
+      };
     }
 
-}
+    const normalizedEmail = email.toLowerCase().trim();
+
+  
+    const existingUser = await findUsrByEmail(normalizedEmail);
+
+    if (existingUser) {
+      return {
+        success: false,
+        message: "User already exists",
+      };
+    }
+
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+
+    const activationCode = crypto
+      .randomBytes(3)
+      .toString("hex")
+      .toUpperCase();
+
+    const newUser = new User({
+      name,
+      email: normalizedEmail,
+      password: hashedPassword,
+      activationCode, 
+      activationCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), 
+      isVerified: false,
+    });
+
+    await newUser.save();
+
+ 
+    await sendMail({
+      email: newUser.email,
+      subject: "Verify Your Account",
+      template: "activation-mail.ejs",
+      data: {
+        name: newUser.name,
+        activationCode,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Registration successful. Verification email sent.",
+    };
+    
+  } catch (error) {
+    console.error("Registration Error:", error);
+
+    return {
+      success: false,
+      message: "Registration failed",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}; 

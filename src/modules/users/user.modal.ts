@@ -1,4 +1,4 @@
-import mongoose, { Mongoose, Schema, model, models } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { IUser, Role } from "./user.interface.js";
 
 const userSchema = new Schema<IUser>(
@@ -6,12 +6,6 @@ const userSchema = new Schema<IUser>(
     name: {
       type: String,
       required: true,
-    },
-
-    username: {
-      type: String,
-      required: true,
-      unique: true,
     },
 
     email: {
@@ -50,16 +44,18 @@ const userSchema = new Schema<IUser>(
       type: [String],
       default: [],
     },
-    activationCOde:{
-       type:String,
-       default:null,
-       select:false
+    activationCode: {
+      type: String,
+      default: null,
+      select: false,
     },
-    activationCodeExpiry:{
-      type:Date,
-      default:null,
-      select:false
+
+    activationCodeExpiry: {
+      type: Date,
+      default: null,
+      select: false,
     },
+
     isVerified: {
       type: Boolean,
       default: false,
@@ -70,4 +66,4 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-export const User = mongoose.model<IUser>("User" , userSchema)
+export const User = mongoose.model<IUser>("User", userSchema);

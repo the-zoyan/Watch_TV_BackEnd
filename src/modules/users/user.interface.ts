@@ -22,7 +22,7 @@ export interface IUser extends Document{
   favorite?: string[];
   watchlist?: string[];
   recentlyWatched?: string[];
-  activationCOde?:string | null;
+  activationCode?:string | null;
   activationCodeExpiry:Date | null
   isVerified: boolean;
   createdAt: Date;

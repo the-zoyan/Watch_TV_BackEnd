@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "./dist/server.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node ./dist/server.js",
-    "dev": "nodemon --watch src --ext ts,json --exec \"node --loader ts-node/esm src/server.ts\""
+    "dev": "nodemon --watch src --ext ts,json --exec tsx src/server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.10.0",
@@ -35,7 +35,6 @@
     "@types/nodemailer": "^8.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
-    "tsx": "^4.22.1",
     "typescript": "^6.0.3"
   }
 }

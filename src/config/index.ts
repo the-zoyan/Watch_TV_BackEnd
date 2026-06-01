@@ -1,12 +1,12 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 
-interface Config{
-    port:number,
-    db:string
-}
-
-export const config:Config = {
-   port:Number(process.env.PORT) || 3000,
-   db:process.env.DATABASE_URL!
-} 
+export const config = {
+  port: Number(process.env.PORT) || 3000,
+  db: process.env.DATABASE_URL!,
+  smtp_host: process.env.SMTP_HOST!,
+  smtp_port: Number(process.env.SMTP_PORT) || 587,
+  smtp_user: process.env.SMTP_USER!,
+  smtp_pass: process.env.SMTP_PASS!,
+  smtp_from: process.env.SMTP_FROM!,
+};
