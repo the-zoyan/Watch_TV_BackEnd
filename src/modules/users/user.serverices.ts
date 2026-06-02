@@ -1,5 +1,5 @@
 import { User } from "../users/user.modal.js"
-import { findUsrByEmail, saveUser } from "../users/user.reposiroty.js"
+import { findUserByEmailForVerification, findUsrByEmail, saveUser } from "../users/user.reposiroty.js"
 import { sendMail } from "../../utils/sendMail.js";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -78,10 +78,9 @@ export const RegisterUser = async (userData: {
   }
 };
 
-
 export const activateUserAccount = async (email: string, activationCode: string) => {
   try {
-    const user = await findUsrByEmail(email)
+    const user = await findUserByEmailForVerification(email)
     if (!user) {
       return {
         success: false,
@@ -128,7 +127,7 @@ export const activateUserAccount = async (email: string, activationCode: string)
 
 export const resendActivationCode = async (email: string) => {
   try {
-    const user = await findUsrByEmail(email)
+    const user = await findUserByEmailForVerification(email)
     if (!user) {
       return {
         success: false,
@@ -178,6 +177,8 @@ export const resendActivationCode = async (email: string) => {
         activationCode,
       },
     });
+     
+    
 
     return {
       success: true,
