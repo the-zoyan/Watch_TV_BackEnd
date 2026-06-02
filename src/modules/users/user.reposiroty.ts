@@ -18,3 +18,11 @@ export const findUserByEmailForVerification = async (email: string) => {
   );
 };
 
+export const findUsrByEmailForLogin = async (email: string) => {
+  return User.findOne({ email }).select("+password");
+};
+
+
+export const findUserById = async (id: string) => {
+  return await User.findById(id);
+}

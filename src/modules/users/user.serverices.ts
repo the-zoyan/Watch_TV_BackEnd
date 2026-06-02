@@ -1,8 +1,11 @@
 import { User } from "../users/user.modal.js"
-import { findUserByEmailForVerification, findUsrByEmail, saveUser } from "../users/user.reposiroty.js"
+import { findUserByEmailForVerification, findUserById, findUsrByEmail, findUsrByEmailForLogin, saveUser } from "../users/user.reposiroty.js"
 import { sendMail } from "../../utils/sendMail.js";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
+import jwt from "jsonwebtoken";
+import { config } from "../../config/index.js";
 
 export const RegisterUser = async (userData: {
   name: string;
@@ -177,8 +180,8 @@ export const resendActivationCode = async (email: string) => {
         activationCode,
       },
     });
-     
-    
+
+
 
     return {
       success: true,
@@ -196,3 +199,97 @@ export const resendActivationCode = async (email: string) => {
     }
   }
 }
+
+
+
+
+export const loginUser = async (email: string, password: string) => {
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await findUsrByEmailForLogin(normalizedEmail);
+
+    if (!user) {
+      return { success: false, message: "Invalid credentials" };
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return { success: false, message: "Invalid credentials" };
+    }
+
+    const accessToken = generateAccessToken({
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    });
+
+    const refreshToken = generateRefreshToken({
+      userId: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    });
+
+    user.refreshToken = refreshToken;
+    user.refreshTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await user.save();
+
+    return {
+      success: true,
+      accessToken,
+      refreshToken,
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      message: "Login failed",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+};
+
+
+export const refreshTokenService = async (refreshToken: string) => {
+    try{
+      if(!refreshToken){
+        return {
+          success:false,
+          message:"Unauthorized",
+          error:['No refresh token provided, Please provide a valid refresh token to access this resource.']
+        }
+      }
+
+      const decoded = jwt.verify(refreshToken , config.jwt_secret) as {userId:string , email:string , role:string}
+     
+      const user = await findUserById(decoded.userId)
+
+      if(!user || user.refreshToken !== refreshToken){
+        return {
+          success:false,
+          message:"Unauthorized",
+          error:['Invalid refresh token, Please provide a valid refresh token to access this resource.']
+        }
+      }
+
+      const newAccessToken = generateAccessToken({
+        userId: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      })
+      
+      return {
+        success:true,
+        accessToken:newAccessToken
+      }
+
+
+    }catch(error){
+        return {
+            success:false,
+            message:"Unauthorized",
+            error:['Invalid refresh token, Please provide a valid refresh token to access this resource.']
+        }
+    }
+};

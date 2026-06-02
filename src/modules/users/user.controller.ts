@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { activateUserAccount, RegisterUser, resendActivationCode } from "./user.serverices.js"; 
+import { activateUserAccount, loginUser, refreshTokenService, RegisterUser, resendActivationCode } from "./user.serverices.js"; 
 
 export const Register = async (req: Request, res: Response) => {
   try {
@@ -73,5 +73,63 @@ export const ResendActivationCode = async (req: Request, res: Response) => {
   }catch(error){
       console.error("Resend Activation Code Error:", error)
       res.status(500).json({ message: "Internal Server Error!" });
+  }
+}
+
+
+export const Login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    const result = await loginUser(email, password);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: false, 
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      accessToken: result.accessToken,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+
+export const refreshTokenController = async (req: Request, res: Response) => {
+  try{
+     
+    const refreshToken = req.cookies.refreshToken;
+    
+    const result = await refreshTokenService(refreshToken);
+
+    if (!result.success) {
+      return res.status(401).json({
+        success: false,
+        message: result.message || "Unauthorized",
+        error: result.error || ['Invalid refresh token, Please provide a valid refresh token to access this resource.']
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+      accessToken: result.accessToken,
+    });
+  }catch(error){
+
   }
 }

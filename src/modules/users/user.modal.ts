@@ -70,6 +70,18 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+
+    refreshToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    refreshTokenExpiresAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
   },
   {
     timestamps: true,

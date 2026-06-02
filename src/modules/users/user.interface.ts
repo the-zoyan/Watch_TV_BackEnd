@@ -27,6 +27,10 @@ export interface IUser extends Document {
 
   isVerified: boolean;
 
+  // AUTH TOKENS
+  refreshToken?: string | null;
+  refreshTokenExpiresAt?: Date | null;
+
   createdAt: Date;
   updatedAt: Date;
 }

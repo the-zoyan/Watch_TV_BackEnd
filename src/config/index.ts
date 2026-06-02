@@ -11,4 +11,6 @@ export const config = {
   smtp_from: process.env.SMTP_FROM!,
   jwt_secret: process.env.JWT_SECRET!,
   jwt_expires_in: process.env.JWT_EXPIRES_IN || "7d",
+  jwt_refresh_secret: process.env.JWT_REFRESH_SECRET!,
+  jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
 };
