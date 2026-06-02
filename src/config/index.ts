@@ -9,4 +9,6 @@ export const config = {
   smtp_user: process.env.SMTP_USER!,
   smtp_pass: process.env.SMTP_PASS!,
   smtp_from: process.env.SMTP_FROM!,
+  jwt_secret: process.env.JWT_SECRET!,
+  jwt_expires_in: process.env.JWT_EXPIRES_IN || "7d",
 };

@@ -12,11 +12,14 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
 
     password: {
       type: String,
       required: true,
+      select: false,
     },
 
     avatar: {
@@ -44,6 +47,7 @@ const userSchema = new Schema<IUser>(
       type: [String],
       default: [],
     },
+
     activationCode: {
       type: String,
       default: null,
@@ -55,6 +59,7 @@ const userSchema = new Schema<IUser>(
       default: null,
       select: false,
     },
+
     lastActivationCodeSentAt: {
       type: Date,
       default: null,

@@ -7,8 +7,6 @@ export enum Role {
 }
 
 export interface IUser extends Document {
-  id: string;
-
   name: string;
   username?: string;
 
@@ -19,9 +17,9 @@ export interface IUser extends Document {
 
   role: Role;
 
-  favorite?: string[];
-  watchlist?: string[];
-  recentlyWatched?: string[];
+  favorite: string[];
+  watchlist: string[];
+  recentlyWatched: string[];
 
   activationCode?: string | null;
   activationCodeExpiry?: Date | null;
