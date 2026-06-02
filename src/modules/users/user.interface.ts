@@ -30,6 +30,8 @@ export interface IUser extends Document {
   // AUTH TOKENS
   refreshToken?: string | null;
   refreshTokenExpiresAt?: Date | null;
+  passwordResetToken?: string | null;
+  passwordResetTokenExpiresAt?: Date | null;
 
   createdAt: Date;
   updatedAt: Date;

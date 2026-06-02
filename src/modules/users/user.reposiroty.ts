@@ -26,3 +26,12 @@ export const findUsrByEmailForLogin = async (email: string) => {
 export const findUserById = async (id: string) => {
   return await User.findById(id);
 }
+
+export const findUserByResetToken = async (token: string) => {
+  return await User.findOne({
+    passwordResetToken: token,
+    passwordResetExpires: {
+      $gt: new Date(),
+    },
+  }).select("+passwordResetToken +passwordResetExpires");
+};

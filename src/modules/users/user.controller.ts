@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { activateUserAccount, loginUser, refreshTokenService, RegisterUser, resendActivationCode } from "./user.serverices.js"; 
+import { activateUserAccount, forgetPasswordService, loginUser, logoutUserService, refreshTokenService, RegisterUser, resendActivationCode } from "./user.serverices.js"; 
 
 export const Register = async (req: Request, res: Response) => {
   try {
@@ -131,5 +131,76 @@ export const refreshTokenController = async (req: Request, res: Response) => {
     });
   }catch(error){
 
+  }
+}
+
+export const logoutUser = async (req: Request, res: Response) => {
+  try{
+    const refreshToken = req.cookies.refreshToken;
+    
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Bad Request",
+        error: ['No refresh token provided, Please provide a valid refresh token to logout.']
+      });
+    }
+    
+    const result = await logoutUserService(refreshToken);
+    
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false, 
+      sameSite: "strict",
+    })
+    
+    return res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+
+
+  }catch(error){
+   return res.status(500).json({
+      success: false,
+      message: "Logout failed",
+    });
+  }
+}
+
+
+export const ForgetPassword = async(req:Request , res:Response) => {
+  try{
+     const {email} = req.body;
+     if(!email){
+      return res.status(400).json({
+        success:false,
+        message:"Email is required",
+        error:['Please provide a valid email address to reset your password.']
+      })
+     }
+     
+     const result = await forgetPasswordService(email)
+
+
+  }catch(error){
+    return{
+      success:false,
+      message:"Failed to process password reset request",
+      error:['An error occurred while processing your password reset request. Please try again later.']
+    }
+  }
+}
+
+
+export const ResetPassword = async(req:Request , res:Response) => {
+  try{
+
+  }catch(error){
+    return{
+      success:false,
+      message:"Failed to reset password",
+      error:['An error occurred while resetting your password. Please try again later.']
+    }
   }
 }

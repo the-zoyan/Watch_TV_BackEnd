@@ -14,7 +14,8 @@ export const sendMail = async (option: {
   template: string;
   data: {
     name: string;
-    activationCode: string;
+    activationCode?: string;
+    resetLink?: string;
   };
 }) => {
 

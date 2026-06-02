@@ -13,4 +13,5 @@ export const config = {
   jwt_expires_in: process.env.JWT_EXPIRES_IN || "7d",
   jwt_refresh_secret: process.env.JWT_REFRESH_SECRET!,
   jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+  client_url: process.env.CLIENT_URL || "http://localhost:3000",
 };
