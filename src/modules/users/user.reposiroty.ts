@@ -12,10 +12,8 @@ export const saveUser = async(user:IUser, session?: mongoose.ClientSession):Prom
       return user.save({session})
 }
 
-export const findUserByEmailForVerification = async (email: string) => {
-  return await User.findOne({ email }).select(
-    "+activationCode +activationCodeExpiry +lastActivationCodeSentAt"
-  );
+export const findUserByEmailForVerification = async (email: string):Promise<IUser | null> => {
+    return User.findOne({email}).select("+activationCode +activationCodeExpiry + lastActivationCodeSentAt")
 };
 
 export const findUsrByEmailForLogin = async (email: string) => {

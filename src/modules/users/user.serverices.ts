@@ -129,47 +129,68 @@ export const activateUserAccount = async (email: string, activationCode: string)
 }
 
 export const resendActivationCode = async (email: string) => {
+
+  console.log("Server Email" , email)
   try {
-    const user = await findUserByEmailForVerification(email)
+    const user = await findUserByEmailForVerification(email);
+
     if (!user) {
       return {
         success: false,
-        message: "User Not Found !",
-        error: ['No account found with the provided email address. Please check the email and try again.']
-      }
+        message: "User Not Found",
+        error: [
+          "No account found with the provided email address. Please check the email and try again.",
+        ],
+      };
     }
+
     if (user.isVerified) {
       return {
         success: false,
         message: "Account Already Activated",
-        error: ['This account is already activated. Please log in to your account.']
-      }
+        error: [
+          "This account is already activated. Please log in to your account.",
+        ],
+      };
     }
-    const COOLDOWN_PERIOD = 1 * 60 * 1000;
+
+    const COOLDOWN_PERIOD = 60 * 1000;
+
     if (user.lastActivationCodeSentAt) {
-      const timeSinceLastSent = Date.now() - user.lastActivationCodeSentAt.getTime()
-      const remainingTime = COOLDOWN_PERIOD - timeSinceLastSent
+      const timeSinceLastSent =
+        Date.now() - user.lastActivationCodeSentAt.getTime();
+
+      const remainingTime = COOLDOWN_PERIOD - timeSinceLastSent;
 
       if (timeSinceLastSent < COOLDOWN_PERIOD) {
-        const seconds = Math.ceil(Math.max(remainingTime, 0) / 1000)
+        const seconds = Math.ceil(remainingTime / 1000);
+
         return {
           success: false,
           message: "Please wait before requesting a new activation code",
-          error: [`You can request a new activation code in ${seconds} seconds.`],
+          error: [
+            `You can request a new activation code in ${seconds} seconds.`,
+          ],
           data: {
-            message: `Please wait ${seconds} seconds before requesting a new activation code.`,
-            retryAfter: seconds
-          }
-        }
+            retryAfter: seconds,
+          },
+        };
       }
     }
 
-    const activationCode = crypto.randomBytes(3).toString('hex').toUpperCase()
-    user.activationCode = activationCode
-    user.activationCodeExpiry = new Date(Date.now() + 10 * 60 * 1000)
-    user.lastActivationCodeSentAt = new Date()
+    const activationCode = crypto
+      .randomBytes(3)
+      .toString("hex")
+      .toUpperCase();
 
-    await saveUser(user)
+    user.activationCode = activationCode;
+    user.activationCodeExpiry = new Date(
+      Date.now() + 10 * 60 * 1000
+    );
+
+    user.lastActivationCodeSentAt = new Date();
+
+    await saveUser(user);
 
     await sendMail({
       email: user.email,
@@ -181,24 +202,27 @@ export const resendActivationCode = async (email: string) => {
       },
     });
 
-
-
     return {
       success: true,
-      message: "Activation code resent successfully",
+      message: "Activation code sent successfully",
       data: {
-        message: "A new activation code has been sent to your email address. Please check your email to activate your account."
-      }
-    }
+        email: user.email,
+      },
+    };
+  } catch (error) {
+    console.error("Resend Activation Code Error:", error);
 
-  } catch (error: any) {
     return {
       success: false,
-      error: [error.message || "An error occurred while resending activation code"],
-      message: "Failed to resend activation code"
-    }
+      message: "Failed to resend activation code",
+      error: [
+        error instanceof Error
+          ? error.message
+          : "Something went wrong",
+      ],
+    };
   }
-}
+};
 
 
 export const loginUser = async (email: string, password: string) => {
@@ -211,9 +235,9 @@ export const loginUser = async (email: string, password: string) => {
       return { success: false, message: "Invalid credentials" };
     }
 
-    if (!user.isVerified){
-      return { 
-        success: false, 
+    if (!user.isVerified) {
+      return {
+        success: false,
         message: "Account not activated",
         error: ['Your account is not activated yet. Please check your email for the activation code and activate your account before logging in.']
       }
@@ -221,7 +245,7 @@ export const loginUser = async (email: string, password: string) => {
 
     if (!user.password) {
       return { success: false, message: "Invalid credentials" };
-    } 
+    }
 
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -340,12 +364,12 @@ export const logoutUserService = async (refreshToken: string) => {
 
 
 export const forgetPasswordService = async (email: string) => {
-  try{
+  try {
     const user = await findUsrByEmail(email.toLowerCase().trim());
 
-    if(!user){
+    if (!user) {
       return {
-        success:false,
+        success: false,
         message: "User not found",
         error: ['No account found with the provided email address. Please check the email and try again.']
       }
@@ -363,7 +387,7 @@ export const forgetPasswordService = async (email: string) => {
       template: "forget-password.ejs",
       data: {
         name: user.name,
-        resetLink:`${config.client_url}/reset-password/${resetToken}`
+        resetLink: `${config.client_url}/reset-password/${resetToken}`
       },
     });
 
@@ -376,8 +400,8 @@ export const forgetPasswordService = async (email: string) => {
     }
 
 
-  }catch(error){
-    return{
+  } catch (error) {
+    return {
       success: false,
       message: "Failed to process forget password request",
       error: error instanceof Error ? error.message : "Unknown error",
